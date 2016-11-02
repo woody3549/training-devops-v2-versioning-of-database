@@ -1,0 +1,62 @@
+version: '2'
+
+services:
+    mysql.dev:
+        image: mysql:5.7
+        container_name: mysql.dev
+        ports:
+        - 33011:3306
+        environment:
+        - MYSQL_DATABASE=devdb
+        - MYSQL_USER=theuser
+        - MYSQL_PASSWORD=thepw
+        - MYSQL_ROOT_PASSWORD=rootpw
+
+    pma.dev:
+        image: phpmyadmin/phpmyadmin:4.6.2-1
+        container_name: pma.dev
+        links:
+        - mysql.dev:db
+        ports:
+        - 33081:80
+        restart: always
+        environment:
+        - PMA_USER=theuser
+        - PMA_PASSWORD=thepw
+        depends_on:
+            - mysql.dev
+
+    mysql.prd:
+        image: mysql:5.7
+        container_name: mysql.prd
+        ports:
+        - 33012:3306
+        environment:
+        - MYSQL_DATABASE=prddb
+        - MYSQL_USER=theuser
+        - MYSQL_PASSWORD=thepw
+        - MYSQL_ROOT_PASSWORD=rootpw
+
+    pma.prd:
+        image: phpmyadmin/phpmyadmin:4.6.2-1
+        container_name: pma.prd
+        links:
+        - mysql.prd:db
+        ports:
+        - 33082:80
+        restart: always
+        environment:
+        - PMA_USER=theuser
+        - PMA_PASSWORD=thepw
+        depends_on:
+            - mysql.prd
+
+    liquibase.global:
+        build: docker-liquibase/.
+        container_name: liquibase.global
+        links:
+        - mysql.dev:mysql.dev
+        - mysql.prd:mysql.prd
+        depends_on:
+            - mysql.dev
+            - mysql.prd
